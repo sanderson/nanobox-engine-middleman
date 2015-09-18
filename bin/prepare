@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# -*- mode: bash; tab-width: 2; -*-
+# vim: ts=2 sw=2 ft=bash noet
+
+# $1 = payload JSON
+
+# exit if anything fails
+set -e
+
+# source the common helper functions
+. /opt/nos/common.sh
+
+eval_payload $1
+
+# install ruby
+install "ruby-2.1"
+
+# install bundler
+install "ruby21-bundler"
+
+# install nginx
+install "nginx-1.8"
+
+# install node.js
+install "nodejs"
+
+# All commands beyond this point run inside of the code_dir
+cd $(payload 'code_dir')
+
+# Bundle install
+run_subprocess "bundle install" "bundle install --deployment"
+
+# generate nginx config
+cat > "$(payload 'build_dir')/etc/nginx/nginx.conf" <<END
+daemon off;
+worker_processes  1;
+error_log  /data/var/log/nginx/error.log;
+events {
+    worker_connections  1024;
+}
+http {
+    include       /data/etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    # access_log  /data/var/log/nginx/access.log  main;
+    keepalive_timeout  65;
+    gzip  on;
+    server {
+        listen       $(payload 'port');
+        server_name  localhost;
+        location / {
+            root   $(payload 'live_dir');
+            index  index.html;
+        }
+        #error_page  404              /404.html;
+        # redirect server error pages to the static page /50x.html
+        #
+        # error_page   500 502 503 504  /50x.html;
+        # location = /50x.html {
+        #     root   share/examples/nginx/html;
+        # }
+    }
+}
+END

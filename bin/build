@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# -*- mode: bash; tab-width: 2; -*-
+# vim: ts=2 sw=2 ft=bash noet
+
+# $1 = payload JSON
+
+# exit if anything fails
+set -e
+
+# source the common helper functions
+. /opt/nos/common.sh
+
+eval_payload $1
+
+# All commands run in the code_dir after this point
+cd $(payload 'code_dir')
+
+# Run the middleman build
+run_subprocess "middleman build" "bundle exec middleman build"
+
+# Sniff middleman's build_dir
+build_dir=$(
+  cat config.rb | grep :build_dir | awk '{ print $3 }' | sed "s/'//g" | sed 's/"//g'
+)
+
+if [[ -z "${build_dir}" ]]; then
+  build_dir="build"
+fi
+
+# Move the build into the live_dir
+print_bullet "Copying build into live code directory..."
+rsync -av --delete $(payload 'code_dir')/${build_dir}/ $(payload 'live_dir')

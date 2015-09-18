@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# -*- mode: bash; tab-width: 2; -*-
+# vim: ts=2 sw=2 ft=bash noet
+
+# $1 = payload JSON
+
+# exit if anything fails
+set -e
+
+# source the common helper functions
+. /opt/nos/common.sh
+
+eval_payload $1
+
+cat <<END
+build:
+  lib_dirs:
+    - vendor
+    - .bundle
+web1:
+  exec: nginx
+END

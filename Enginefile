@@ -1,0 +1,10 @@
+name: 'middleman'
+version: '0.1.0'
+summary: 'Nanobox engine for Middleman deployments'
+language: 'ruby'
+stability: 'stable'
+license: 'MIT'
+generic: false
+
+authors:
+  - scott@nanobox.io
